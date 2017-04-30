@@ -1,5 +1,5 @@
 require "rails_api_authentication/version"
 
 module RailsApiAuthentication
-  # Your code goes here...
+  VERSION = "0.1"
 end
