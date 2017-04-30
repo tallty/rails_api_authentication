@@ -33,6 +33,9 @@ Gem::Specification.new do |spec|
   # Object-Hash Mapping for Redis
   # https://github.com/soveran/ohm
   spec.add_dependency "ohm"
+  # This is a library generating unique id in short pattern. https://rubygems.org/gems/uuid64
+  # https://github.com/heckpsi-lab/uuid64
+  spec.add_dependency "uuid64"
 
   spec.add_development_dependency "bundler", "~> 1.14"
   spec.add_development_dependency "rake", "~> 10.0"
