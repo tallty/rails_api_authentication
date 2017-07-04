@@ -11,12 +11,12 @@ module RailsApiAuthentication
       @auth_token = self.class.klass.login(session_params[auth_key], session_params[auth_password])
       render json: { token: @auth_token.token }, status: 200
     rescue UserError => e
-      render json: e.message, status: e.status
+      render json: { error: e.message }, status: e.status
     end
 
     def destroy
       self.send("current_#{self.class.klass_sym}")&.logout
-      render json: "logout successful", status: 200
+      render json: { message: "logout successful" }, status: 200
     end
 
     private
