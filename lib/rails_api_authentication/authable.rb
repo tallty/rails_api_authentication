@@ -35,25 +35,18 @@ module RailsApiAuthentication
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
       end
 
-      def register(attrs_or_name, password=nil)
-        if attrs_or_name.respond_to?(:to_h)
-          # attrs_or_name is an Hash or ActionController::Parameters
-          @_attrs_copy = attrs_or_name.clone
-          name = @_attrs_copy[@auth_key]
-          password = @_attrs_copy.delete(@auth_password)
-        else
-          name = attrs_or_name
-        end
-
+      def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
-        
-        self.create!({ 
-              @auth_key => name,
-              @auth_password => generate_password(password)
-            }.merge( @_attrs_copy || {} )
-          ) 
+        self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)  
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
+      end
+
+      def register_with(attrs={})
+        attrs = attrs.clone
+        name = attrs.delete @auth_key
+        password = attrs.delete @auth_password
+        register(name, password, attrs)
       end
 
       private
@@ -92,3 +85,4 @@ module RailsApiAuthentication
     end
   end
 end
+
