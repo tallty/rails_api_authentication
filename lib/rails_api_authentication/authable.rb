@@ -37,7 +37,8 @@ module RailsApiAuthentication
 
       def generate_valid_code name
         code = (0..9).to_a.sample(@valid_length).join
-        $redis.setex(name, @valid_expire, code)
+        $redis.setex("#{self}::#{name}", @valid_expire, code)
+        code
       end
 
       def login(name, password)
@@ -81,7 +82,7 @@ module RailsApiAuthentication
       end
 
       def valid? name, valid_code
-        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get(name))
+        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get("#{self}::#{name}))
       end
 
       def auth(request)
