@@ -55,7 +55,7 @@ module RailsApiAuthentication
 
       def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
-        raise(UserError.new(401, '-1', 'valid token is not correct')) if @valid_key.present? && !valid?(name, attrs[@valid_key])
+        raise(UserError.new(401, '-1', 'valid token is not correct')) unless valid?(name, attrs[@valid_key])
         self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
@@ -81,7 +81,7 @@ module RailsApiAuthentication
       end
 
       def valid? name, valid_code
-        valid_code == $redis.get(name)
+        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get(name))
       end
 
       def auth(request)
