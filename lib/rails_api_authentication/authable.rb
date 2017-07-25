@@ -82,7 +82,7 @@ module RailsApiAuthentication
       end
 
       def valid? name, valid_code
-        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get("#{self}::#{name}))
+        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get("#{self}::#{name}"))
       end
 
       def auth(request)
