@@ -4,21 +4,40 @@ module RailsApiAuthentication
 
     DIGEST = Digest::SHA2.new
 
-
     included do
       attr_accessor :token
 
       def logout
         AuthToken.find(token: token)&.first&.delete if token.present?
       end
+
+      def update_password password
+        raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
+        self.update(@auth_password => generate_password(password))
+      end
+
+      def reset_password password, valid_code
+        update_password(password) if self.class.valid?(self.send(@auth_key), valid_code)
+      end
     end
 
     module ClassMethods
-      attr_reader :auth_key, :auth_password
+      attr_reader :auth_key, :auth_password, :valid_key
       
       def auth_for params
         @auth_key = params[:auth_key]&.to_sym || :name
         @auth_password = params[:auth_password]&.to_sym || :password
+      end
+
+      def valid_for params
+        @valid_key = params[:key]&.to_sym || :valid_code
+        @valid_expire = params[:expire]&.to_sym || 60
+        @valid_length = params[:length]&.to_sym || 4
+      end
+
+      def generate_valid_code name
+        code = (0..9).to_a.sample(@valid_length).join
+        $redis.setex(name, @valid_expire, code)
       end
 
       def login(name, password)
@@ -29,7 +48,6 @@ module RailsApiAuthentication
         AuthToken.create(self, { oid: user.id })
       end
 
-
       def auth!(request)
         user = auth(request)
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
@@ -37,7 +55,8 @@ module RailsApiAuthentication
 
       def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
-        self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)  
+        raise(UserError.new(401, '-1', 'valid token is not correct')) if @valid_key.present? && !valid?(name, attrs[@valid_key])
+        self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
       end
@@ -59,6 +78,10 @@ module RailsApiAuthentication
       def generate_password(password)
         suffix = SecureRandom.hex 8
         "#{salt(password, suffix)}:#{suffix}"
+      end
+
+      def valid? name, valid_code
+        valid_code == $redis.get(name)
       end
 
       def auth(request)

@@ -9,5 +9,10 @@ module RailsApiAuthentication
       include RailsApiAuthentication::AuthSession
       auth_session klass_sym
     end
+
+    def acts_as_auth_password(klass_sym)
+      include RailsApiAuthentication::AuthPassword
+      auth_password klass_sym
+    end
   end
 end
