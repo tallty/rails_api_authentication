@@ -13,11 +13,13 @@ module RailsApiAuthentication
 
       def update_password password
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
-        self.update(@auth_password => generate_password(password))
+        auth_password = self.class.auth_password
+        self.update(auth_password => self.class.send(:generate_password, password))
       end
 
       def reset_password password, valid_code
-        update_password(password) if self.class.valid?(self.send(@auth_key), valid_code)
+        auth_key = self.class.auth_key
+        update_password(password) if self.class.valid!(self.send(auth_key), valid_code)
       end
     end
 
@@ -31,7 +33,7 @@ module RailsApiAuthentication
 
       def valid_for params
         @valid_key = params[:key]&.to_sym || :valid_code
-        @valid_expire = params[:expire]&.to_sym || 60
+        @valid_expire = params[:expire]&.to_sym || 600
         @valid_length = params[:length]&.to_sym || 4
       end
 
@@ -56,7 +58,7 @@ module RailsApiAuthentication
 
       def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
-        raise(UserError.new(401, '-1', 'valid token is not correct')) unless valid?(name, attrs.delete(@valid_key))
+        valid! name, attrs.delete(@valid_key)
         self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
@@ -67,6 +69,10 @@ module RailsApiAuthentication
         name = attrs.delete @auth_key
         password = attrs.delete @auth_password
         register(name, password, attrs)
+      end
+
+      def valid! name, valid_code
+        raise(UserError.new(401, '-1', 'valid token is not correct')) unless valid?(name, valid_code)
       end
 
       private

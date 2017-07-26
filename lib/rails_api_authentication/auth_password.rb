@@ -7,9 +7,11 @@ module RailsApiAuthentication
 
     # Reset password with token
     def create
+      auth_key = self.class.klass.auth_key
       auth_password = self.class.klass.auth_password
       valid_key = self.class.klass.valid_key
-      self.send("current_#{self.class.klass_sym}")&.reset_password(reset_password_params[auth_password], reset_password_params[valid_key])
+      current_authable = self.class.klass.send(:find_by!, auth_key => reset_password_params[auth_key])
+      current_authable.reset_password(reset_password_params[auth_password], reset_password_params[valid_key])
       render json: { meesage: "reset password successful"}, status: 200
     rescue UserError => e
       render json: { error: e.message }, status: e.status
@@ -31,10 +33,11 @@ module RailsApiAuthentication
       end
 
       def reset_password_params
+        auth_key = self.class.klass.auth_key
         auth_password = self.class.klass.auth_password
         valid_key = self.class.klass.valid_key
         params.require(self.class.klass_sym).permit(
-          auth_password, valid_key
+          auth_key, auth_password, valid_key
         )
       end
 
