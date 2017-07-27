@@ -25,7 +25,7 @@ module RailsApiAuthentication
 
     module ClassMethods
       attr_reader :auth_key, :auth_password, :valid_key
-      
+
       def auth_for params
         @auth_key = params[:auth_key]&.to_sym || :name
         @auth_password = params[:auth_password]&.to_sym || :password
@@ -35,6 +35,7 @@ module RailsApiAuthentication
         @valid_key = params[:key]&.to_sym || :valid_code
         @valid_expire = params[:expire]&.to_sym || 600
         @valid_length = params[:length]&.to_sym || 4
+        @valid_god = params[:god]
       end
 
       def generate_valid_code name
@@ -88,7 +89,9 @@ module RailsApiAuthentication
       end
 
       def valid? name, valid_code
-        @valid_key.blank? || (valid_code.present? && valid_code == $redis.get("#{self}::#{name}"))
+        @valid_key.blank? ||
+        ( @valid_god.present? && valid_code == @valid_god ) ||
+        ( valid_code.present? && valid_code == $redis.get("#{self}::#{name}") )
       end
 
       def auth(request)
