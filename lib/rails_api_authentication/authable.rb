@@ -72,6 +72,13 @@ module RailsApiAuthentication
         AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) )
       end
 
+      def oauth_login(oauth_type, oauth_id)
+        user = self.find_or_create_by oauth_type: oauth_type, oauth_id: oauth_id
+        AuthToken.create(
+          self, {oid: user.id, oauth_type: oauth_type, oauth_id: oauth_id }
+        )
+      end
+
       def auth!(request)
         token = request.env["HTTP_#{self.to_s.upcase}_TOKEN"] || request.env["#{self.to_s.upcase}_TOKEN"]
         user = auth(token)
