@@ -38,10 +38,25 @@ module RailsApiAuthentication
         @valid_god = params[:god]
       end
 
+      def code_for params
+        @auth_key = params[:auth_key]&.to_sym || :name
+        valid_for params.merge( { key: @auth_key} )
+      end
+
       def generate_valid_code name
         code = (0..9).to_a.sample(@valid_length).join
         $redis.setex("#{self}::#{name}", @valid_expire, code)
         code
+      end
+
+      def code_login name, code
+        raise(UserError.new(401, '-1', "The authorization need password")) if @auth_password.present
+        valid! name, code
+        user = self.find_or_create_by(@auth_key => name)
+        raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
+        AuthToken.create(self, { oid: user.id })
+      rescue ActiveRecord::RecordInvalid => e
+        raise UserError.new(401, '-1', e.message)
       end
 
       def login(name, password)
