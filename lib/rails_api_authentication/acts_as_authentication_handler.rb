@@ -18,5 +18,12 @@ module RailsApiAuthentication
       auth_action klass_sym, only: [:update]
       auth_password klass_sym
     end
+
+    def acts_as_code_session(klass_sym)
+      include RailsApiAuthentication::AuthAction
+      include RailsApiAuthentication::CodeSession
+      auth_action klass_sym, only: [:destroy]
+      code_session klass_sym
+    end
   end
 end

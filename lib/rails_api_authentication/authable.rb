@@ -50,7 +50,7 @@ module RailsApiAuthentication
       end
 
       def code_login name, code
-        raise(UserError.new(401, '-1', "The authorization need password")) if @auth_password.present
+        raise(UserError.new(401, '-1', "The authorization need password")) if @auth_password.present?
         valid! name, code
         user = self.find_or_create_by(@auth_key => name)
         raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
@@ -76,7 +76,9 @@ module RailsApiAuthentication
       def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
         valid! name, attrs.delete(@valid_key)
-        self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
+        user = self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
+        user.token = AuthToken.create(self, { oid: user.id }).token
+        user
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
       end
