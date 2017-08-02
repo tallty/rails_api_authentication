@@ -53,7 +53,8 @@ module RailsApiAuthentication
       end
 
       def auth!(request)
-        user = auth(request)
+        token = request.env["HTTP_#{self.to_s.upcase}_TOKEN"] || request.env["#{self.to_s.upcase}_TOKEN"]
+        user = auth(token)
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
       end
 
@@ -94,8 +95,7 @@ module RailsApiAuthentication
         ( valid_code.present? && valid_code == $redis.get("#{self}::#{name}") )
       end
 
-      def auth(request)
-        token = request.env["HTTP_#{self.to_s.upcase}_TOKEN"] || request.env["#{self.to_s.upcase}_TOKEN"]
+      def auth(token)
         auth = AuthToken.find(token: token)&.first
         if auth.nil?
           nil
