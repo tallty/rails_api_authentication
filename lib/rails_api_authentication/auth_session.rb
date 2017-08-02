@@ -8,7 +8,7 @@ module RailsApiAuthentication
     def create
       auth_key = self.class.klass.auth_key
       auth_password = self.class.klass.auth_password
-      @auth_token = self.class.klass.login(session_params[auth_key], session_params[auth_password])
+      @auth_token = self.class.klass.login(session_params.delete(auth_key), session_params.delete(auth_password), session_params)
       render json: { token: @auth_token.token }, status: 200
     rescue UserError => e
       render json: { error: e.message }, status: e.status
@@ -19,11 +19,16 @@ module RailsApiAuthentication
       render json: { message: "logout successful" }, status: 200
     end
 
-    private
+    private 
       def session_params
         auth_key = self.class.klass.auth_key
         auth_password = self.class.klass.auth_password
-        params.require(self.class.klass_sym).permit(auth_key, auth_password)
+        oauth_enable = self.class.oauth_enable
+        if oauth_enable
+          params.require(self.class.klass_sym).permit(auth_key, auth_password, :oauth_type, :oauth_id)
+        else
+          params.require(self.class.klass_sym).permit(auth_key, auth_password)
+        end
       end
 
     module ClassMethods

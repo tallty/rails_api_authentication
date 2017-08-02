@@ -9,5 +9,15 @@ module RailsApiAuthentication
       include RailsApiAuthentication::Authable
       valid_for params
     end
+
+    def acts_as_code_authentication params={}
+      include RailsApiAuthentication::Authable
+      code_for params
+    end
+
+    def acts_as_oauthable params
+      include RailsApiAuthentication::Authable
+      oauth_for params
+    end
   end
 end

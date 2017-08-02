@@ -24,7 +24,7 @@ module RailsApiAuthentication
     end
 
     module ClassMethods
-      attr_reader :auth_key, :auth_password, :valid_key
+      attr_reader :auth_key, :auth_password, :valid_key, :oauth_enable, :oauth_only
 
       def auth_for params
         @auth_key = params[:auth_key]&.to_sym || :name
@@ -43,28 +43,33 @@ module RailsApiAuthentication
         valid_for params.merge( { key: @auth_key} )
       end
 
+      def oauth_for
+        @oauth_enable = params[:enable] || false
+        @oauth_only = params[:only] || false
+      end
+
       def generate_valid_code name
         code = (0..9).to_a.sample(@valid_length).join
         $redis.setex("#{self}::#{name}", @valid_expire, code)
         code
       end
 
-      def code_login name, code
+      def code_login name, code, params={}
         raise(UserError.new(401, '-1', "The authorization need password")) if @auth_password.present?
         valid! name, code
         user = self.find_or_create_by(@auth_key => name)
         raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
-        AuthToken.create(self, { oid: user.id })
+        AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) )
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
       end
 
-      def login(name, password)
+      def login(name, password, params={})
         user = self.find_by(@auth_key => name)
         raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
         salted = user.password.split(':')
         raise(UserError.new(401, '-1', 'Unauthorized')) unless salt(password, salted[1]) == salted[0]
-        AuthToken.create(self, { oid: user.id })
+        AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) )
       end
 
       def auth!(request)
@@ -73,11 +78,11 @@ module RailsApiAuthentication
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
       end
 
-      def register(name, password, attrs={})
+      def register(name, password, params={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
         valid! name, attrs.delete(@valid_key)
-        user = self.create!({@auth_key => name, @auth_password => generate_password(password)}.merge attrs)
-        user.token = AuthToken.create(self, { oid: user.id }).token
+        user = self.create!({@auth_key => name, @auth_password => generate_password(password)})
+        user.token = AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) ).token
         user
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
@@ -95,6 +100,10 @@ module RailsApiAuthentication
       end
 
       private
+
+      def oauth_params params
+        params.select { |k, v| [:oauth_type, :oauth_id].include? k&.to_sym  }
+      end
 
       def salt(password, suffix)
         5.times { password = DIGEST.digest(password + suffix) }
