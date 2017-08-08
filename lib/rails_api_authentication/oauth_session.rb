@@ -17,10 +17,9 @@ module RailsApiAuthentication
       render json: { message: "logout successful" }, status: 200
     end
 
-    private 
-      def session_params
-        params.require(self.class.klass_sym).permit(:oauth_type, :oauth_id)
-      end
+    def session_params
+      params.require(self.class.klass_sym).permit(:oauth_type, :oauth_id)
+    end
 
     module ClassMethods
       attr_reader :klass, :klass_sym

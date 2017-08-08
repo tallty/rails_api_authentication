@@ -43,8 +43,8 @@ module RailsApiAuthentication
         valid_for params.merge( { key: @auth_key} )
       end
 
-      def oauth_for
-        @oauth_enable = params[:enable] || false
+      def oauth_for params={}
+        @oauth_enable = params[:enable] || true
         @oauth_only = params[:only] || false
       end
 

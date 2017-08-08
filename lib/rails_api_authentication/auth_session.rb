@@ -19,17 +19,16 @@ module RailsApiAuthentication
       render json: { message: "logout successful" }, status: 200
     end
 
-    private 
-      def session_params
-        auth_key = self.class.klass.auth_key
-        auth_password = self.class.klass.auth_password
-        oauth_enable = self.class.oauth_enable
-        if oauth_enable
-          params.require(self.class.klass_sym).permit(auth_key, auth_password, :oauth_type, :oauth_id)
-        else
-          params.require(self.class.klass_sym).permit(auth_key, auth_password)
-        end
+    def session_params
+      auth_key = self.class.klass.auth_key
+      auth_password = self.class.klass.auth_password
+      oauth_enable = self.class.oauth_enable
+      if oauth_enable
+        params.require(self.class.klass_sym).permit(auth_key, auth_password, :oauth_type, :oauth_id)
+      else
+        params.require(self.class.klass_sym).permit(auth_key, auth_password)
       end
+    end
 
     module ClassMethods
       attr_reader :klass, :klass_sym
