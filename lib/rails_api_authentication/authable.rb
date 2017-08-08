@@ -40,7 +40,7 @@ module RailsApiAuthentication
 
       def code_for params
         @auth_key = params[:auth_key]&.to_sym || :name
-        valid_for params.merge( { key: @auth_key} )
+        valid_for params
       end
 
       def oauth_for params={}
