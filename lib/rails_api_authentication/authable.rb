@@ -80,8 +80,9 @@ module RailsApiAuthentication
           )
         else
           auth = AuthToken.find(oauth_type: oauth_type, oauth_id: oauth_id)&.first
-          user = self.find_by(id: auth.oid)
+          user = self.find_by(id: auth&.oid)
           raise(UserError.new(401, '-1', 'Unauthorized')) unless user.present?
+          auth
         end
       end
 
