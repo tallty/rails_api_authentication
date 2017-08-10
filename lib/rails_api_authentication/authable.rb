@@ -5,7 +5,7 @@ module RailsApiAuthentication
     DIGEST = Digest::SHA2.new
 
     included do
-      attr_accessor :token
+      attr_accessor :token, :auth
 
       def logout
         AuthToken.find(token: token)&.first&.delete if token.present?
@@ -151,6 +151,7 @@ module RailsApiAuthentication
         else
           user = self.find_by(id: auth.oid)
           user.token = auth.token
+          user.auth = auth
           user
         end
       end
