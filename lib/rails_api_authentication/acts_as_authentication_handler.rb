@@ -15,7 +15,7 @@ module RailsApiAuthentication
     def acts_as_oauth_session(klass_sym)
       include RailsApiAuthentication::AuthAction
       include RailsApiAuthentication::OauthSession
-      auth_action klass_sym, only: [:destroy]
+      auth_action klass_sym, only: [:update, :destroy]
       oauth_session klass_sym
     end
 

@@ -14,9 +14,9 @@ module RailsApiAuthentication
 
     def update
       @auth_token = self.class.klass.oauth_relate(
-        session_relate_params.delete(:token),
-        session_relate_params.delete(:oauth_type),
-        session_relate_params.delete(:oauth_id),
+        self.send("current_#{self.class.klass_sym}")&.token,
+        session_params.delete(:oauth_type),
+        session_params.delete(:oauth_id),
       )
       render json: { token: @auth_token.token }, status: 200
     rescue UserError => e
@@ -26,12 +26,6 @@ module RailsApiAuthentication
     def destroy
       self.send("current_#{self.class.klass_sym}")&.logout
       render json: { message: "logout successful" }, status: 200
-    end
-
-    def session_relate_params
-      params.require(self.class.klass_sym).permit(
-        :oauth_type, :oauth_id, :token
-      )
     end
 
     def session_params
