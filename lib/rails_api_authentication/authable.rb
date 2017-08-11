@@ -101,11 +101,11 @@ module RailsApiAuthentication
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
       end
 
-      def register(name, password, params={})
+      def register(name, password, attrs={})
         raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
         valid! name, attrs.delete(@valid_key)
         user = self.create!({@auth_key => name, @auth_password => generate_password(password)})
-        user.token = AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) ).token
+        user.token = AuthToken.create(self, oauth_params(attrs).merge({ oid: user.id }) ).token
         user
       rescue ActiveRecord::RecordInvalid => e
         raise UserError.new(401, '-1', e.message)
