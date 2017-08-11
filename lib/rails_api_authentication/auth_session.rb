@@ -22,7 +22,7 @@ module RailsApiAuthentication
     def session_params
       auth_key = self.class.klass.auth_key
       auth_password = self.class.klass.auth_password
-      oauth_enable = self.class.oauth_enable
+      oauth_enable = self.class.klass.oauth_enable
       if oauth_enable
         params.require(self.class.klass_sym).permit(auth_key, auth_password, :oauth_type, :oauth_id)
       else
