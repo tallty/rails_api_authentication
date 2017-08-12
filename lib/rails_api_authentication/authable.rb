@@ -68,7 +68,7 @@ module RailsApiAuthentication
         user = self.find_by(@auth_key => name)
         raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
         salted = user.password.split(':')
-        raise(UserError.new(401, '-1', 'Unauthorized')) unless salt(password, salted[1]) == salted[0]
+        raise(UserError.new(401, '-1', 'Unauthorized')) unless salted[1].present? && salt(password, salted[1]) == salted[0]
         AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) )
       end
 
