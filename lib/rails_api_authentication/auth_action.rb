@@ -15,7 +15,7 @@ module RailsApiAuthentication
 
     module ClassMethods
       def auth_action klass_sym, options={}
-        before_action :perform, options
+        prepend_before_action :perform, options
         @klass = klass_sym.to_s.camelize.constantize
         define_method("current_#{klass_sym}") { @current_auth || nil }
       end
