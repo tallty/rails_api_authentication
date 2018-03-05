@@ -12,7 +12,7 @@ module RailsApiAuthentication
       end
 
       def update_password password
-        raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
+        raise(UserError.new(400, '-1', 'password is blank')) if password.blank?
         auth_password = self.class.auth_password
         self.update(auth_password => self.class.send(:generate_password, password))
       end
@@ -61,7 +61,7 @@ module RailsApiAuthentication
         raise(UserError.new(401, '-1', 'Unauthorized')) if user.nil?
         AuthToken.create(self, oauth_params(params).merge({ oid: user.id }) )
       rescue ActiveRecord::RecordInvalid => e
-        raise UserError.new(401, '-1', e.message)
+        raise UserError.new(400, '-1', e.message)
       end
 
       def login(name, password, params={})
@@ -102,13 +102,13 @@ module RailsApiAuthentication
       end
 
       def register(name, password, attrs={})
-        raise(UserError.new(401, '-1', 'password is blank')) if password.blank?
+        raise(UserError.new(400, '-1', 'password is blank')) if password.blank?
         valid! name, attrs.delete(@valid_key)
         user = self.create!({@auth_key => name, @auth_password => generate_password(password)})
         user.token = AuthToken.create(self, oauth_params(attrs).merge({ oid: user.id }) ).token
         user
       rescue ActiveRecord::RecordInvalid => e
-        raise UserError.new(401, '-1', e.message)
+        raise UserError.new(400, '-1', e.message)
       end
 
       def register_with(attrs={})
