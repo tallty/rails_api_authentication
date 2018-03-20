@@ -96,9 +96,15 @@ module RailsApiAuthentication
       end
 
       def auth!(request)
-        token = request.env["HTTP_#{self.to_s.upcase}_TOKEN"] || request.env["#{self.to_s.upcase}_TOKEN"]
+        token = request.env["HTTP_#{token_key}_TOKEN"] || request.env["#{token_key}_TOKEN"]
         user = auth(token)
         user.nil? ? raise(UserError.new(401, '-1', 'Unauthorized')) : user
+      end
+
+      attr_writer :token_key
+
+      def token_key
+        @token_key ||= self.to_s
       end
 
       def register(name, password, attrs={})
