@@ -104,7 +104,7 @@ module RailsApiAuthentication
       attr_writer :token_key
 
       def token_key
-        @token_key ||= self.to_s
+        @token_key ||= self.to_s.upcase
       end
 
       def register(name, password, attrs={})
