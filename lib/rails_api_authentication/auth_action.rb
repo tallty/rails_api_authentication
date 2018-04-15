@@ -21,7 +21,7 @@ module RailsApiAuthentication
       end
 
       def action_class
-        @klass
+        @klass || superclass.action_class
       end
     end
   end
