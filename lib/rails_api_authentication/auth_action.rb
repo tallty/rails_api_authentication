@@ -7,21 +7,27 @@ module RailsApiAuthentication
     end
 
     def perform
-      klass = self.class.action_class
-      @current_auth = klass.send(:auth!, request)
-    rescue UserError => e
-      render json: e.message, status: e.status
+      klasses = self.class.action_classes
+      klasses.each do |klass|
+        @current_auth = klass.auth!(request) rescue next
+        break
+      end
+      render(json: "Unauthorized", status: 401) if @current_auth.nil?
     end
 
     module ClassMethods
       def auth_action klass_sym, options={}
         prepend_before_action :perform, options
-        @klass = klass_sym.to_s.camelize.constantize
-        define_method("current_#{klass_sym}") { @current_auth || nil }
+        define_method("current_auth") { @current_auth }
+
+        @klasses = Array(klass_sym).map do |sym|
+          define_method("current_#{sym}") { @current_auth }
+          sym.to_s.camelize.constantize
+        end
       end
 
-      def action_class
-        @klass || superclass.action_class
+      def action_classes
+        @klasses || superclass.action_classes
       end
     end
   end
