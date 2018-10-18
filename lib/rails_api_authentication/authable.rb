@@ -97,6 +97,7 @@ module RailsApiAuthentication
       def oauth_relate(token, oauth_type, oauth_id)
         auth = AuthToken.find(token: token)&.first
         if auth.present? && self.find_by(id: auth.oid).present?
+          AuthToken.find(oauth_type: oauth_type, oauth_id: oauth_id)&.each { |auth_token| auth_token.delete }
           auth.update(oauth_type: oauth_type, oauth_id: oauth_id)
         else
           raise(UserError.new(401, '-1', 'Unauthorized')) unless user.present?
