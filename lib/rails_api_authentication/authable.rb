@@ -11,6 +11,10 @@ module RailsApiAuthentication
         AuthToken.find(token: token)&.first&.delete if token.present?
       end
 
+      def password_raw= password
+        self.update_password(password)
+      end
+
       def update_password password
         raise(UserError.new(400, '-1', 'password is blank')) if password.blank?
         auth_password = self.class.auth_password
