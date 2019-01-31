@@ -22,6 +22,7 @@ module RailsApiAuthentication
 
         @klasses = Array(klass_sym).map do |sym|
           define_method("current_#{sym}") { @current_auth }
+          instance_variable_set("@current_#{sym}", @current_auth)
           sym.to_s.camelize.constantize
         end
       end
