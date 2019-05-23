@@ -10,7 +10,7 @@ module RailsApiAuthentication
       klasses = self.class.action_classes
       klasses.each do |klass|
         @current_auth = klass.auth!(request) rescue next
-        sym = klass.name.underscore.to_sym
+        sym = klass.name.underscore.gsub('/', '_').to_sym
         instance_variable_set("@current_#{sym}", @current_auth)
         break
       end
