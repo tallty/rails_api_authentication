@@ -139,7 +139,7 @@ module RailsApiAuthentication
       end
 
       def valid! name, valid_code
-        raise(UserError.new(401, '-1', 'valid token is not correct')) unless valid?(name, valid_code)
+        raise(UserError.new(422, '-1', 'valid token is not correct')) unless valid?(name, valid_code)
         true
       end
 
