@@ -45,9 +45,9 @@ module RailsApiAuthentication
 
       def valid_for params
         @valid_key = params[:key]&.to_sym || :valid_code
-        @valid_expire = params[:expire]&.to_sym || 600
-        @valid_length = params[:length]&.to_sym || 4
-        @register_valid = params[:register_valid] || true
+        @valid_expire = params[:expire] || 600
+        @valid_length = params[:length] || 4
+        @register_valid = params[:register_valid].nil? ? true : params[:register_valid]
         @valid_god = params[:god]
       end
 
@@ -123,7 +123,7 @@ module RailsApiAuthentication
 
       def register(name, password, attrs={})
         raise(UserError.new(400, '-1', 'password is blank')) if password.blank?
-        valid! name, attrs.delete(@valid_key) if @register_valid
+        valid!(name, attrs.delete(@valid_key)) if @register_valid
         user = self.create!({auth_key => name, @auth_password => generate_password(password)})
         user.token = AuthToken.create(self, oauth_params(attrs).merge({ oid: user.id }) ).token
         user
